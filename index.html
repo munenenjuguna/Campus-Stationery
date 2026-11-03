@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CampusStationery | Your Campus Bookstore</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+
+            <a class="navbar-brand" href="index.html">
+                Campus<span>Stationery.</span>
+            </a>
+
+            <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Home</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="pages/products.html">Shop</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#categories">Categories</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About Us</a>
+                    </li>
+                </ul>
+
+                <div class="nav-actions">
+                    <a href="pages/login.html" class="login-link">Login</a>
+
+                    <a href="pages/cart.html" class="cart-link">
+                        <i class="bi bi-bag"></i>
+                        <span>Cart</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+
+                <div class="col-lg-6 hero-content">
+
+                    <span class="hero-label">
+                        <i class="bi bi-mortarboard"></i>
+                        YOUR CAMPUS ESSENTIALS, ALL IN ONE PLACE
+                    </span>
+
+                    <h1>
+                        Everything You Need
+                        <span>To Excel.</span>
+                    </h1>
+
+                    <p>
+                        From everyday notebooks to essential study tools,
+                        find everything you need to make your academic
+                        journey easier.
+                    </p>
+
+                    <div class="hero-buttons">
+
+                        <a href="pages/products.html" class="btn-primary-custom">
+                            Explore Products
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                        <a href="#categories" class="btn-secondary-custom">
+                            Browse Categories
+                        </a>
+
+                    </div>
+
+                    <div class="hero-trust">
+                        <div>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Quality Products
+                        </div>
+
+                        <div>
+                            <i class="bi bi-check-circle-fill"></i>
+                            Student Friendly Prices
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="col-lg-6 hero-image-container">
+
+                    <img
+                        src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1000"
+                        alt="Study desk with stationery and notebooks"
+                        class="hero-image">
+
+                    <div class="floating-card">
+                        <i class="bi bi-book-half"></i>
+
+                        <div>
+                            <strong>Study Better.</strong>
+                            <small>Stay prepared.</small>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <!-- CATEGORIES SECTION -->
+    <section class="categories-section" id="categories">
+
+        <div class="container">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-label">FIND WHAT YOU NEED</span>
+                    <h2>Shop by Category</h2>
+                </div>
+
+                <a href="pages/products.html" class="view-all">
+                    View All Products
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+
+            <div class="row g-4">
+
+                <div class="col-6 col-lg-3">
+                    <a href="pages/products.html?category=notebooks" class="category-card">
+
+                        <div class="category-icon notebook-icon">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+
+                        <h5>Notebooks</h5>
+                        <p>For all your notes</p>
+
+                    </a>
+                </div>
+
+
+                <div class="col-6 col-lg-3">
+                    <a href="pages/products.html?category=writing" class="category-card">
+
+                        <div class="category-icon writing-icon">
+                            <i class="bi bi-pencil"></i>
+                        </div>
+
+                        <h5>Writing Materials</h5>
+                        <p>Pens, pencils & more</p>
+
+                    </a>
+                </div>
+
+
+                <div class="col-6 col-lg-3">
+                    <a href="pages/products.html?category=calculators" class="category-card">
+
+                        <div class="category-icon calculator-icon">
+                            <i class="bi bi-calculator"></i>
+                        </div>
+
+                        <h5>Calculators</h5>
+                        <p>Tools for calculations</p>
+
+                    </a>
+                </div>
+
+
+                <div class="col-6 col-lg-3">
+                    <a href="pages/products.html?category=accessories" class="category-card">
+
+                        <div class="category-icon accessories-icon">
+                            <i class="bi bi-backpack"></i>
+                        </div>
+
+                        <h5>Accessories</h5>
+                        <p>Everyday essentials</p>
+
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FEATURED PRODUCTS -->
+    <section class="featured-section">
+
+        <div class="container">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-label">OUR SELECTION</span>
+                    <h2>Featured Products</h2>
+                    <p class="section-description">
+                        Essential stationery to keep you prepared.
+                    </p>
+                </div>
+
+                <a href="pages/products.html" class="view-all">
+                    Shop All
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+
+            <div class="row g-4">
+
+                <!-- PRODUCT 1 -->
+                <div class="col-6 col-lg-3">
+                    <div class="product-card">
+
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600"
+                                alt="Notebook">
+
+                            <span class="product-tag">Popular</span>
+                        </div>
+
+                        <div class="product-info">
+                            <small>Notebooks</small>
+                            <h5>A5 Hardcover Notebook</h5>
+
+                            <div class="product-bottom">
+                                <strong>KSh 350</strong>
+
+                                <button class="add-cart-btn" aria-label="Add notebook to cart">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- PRODUCT 2 -->
+                <div class="col-6 col-lg-3">
+                    <div class="product-card">
+
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600"
+                                alt="Pens">
+
+                        </div>
+
+                        <div class="product-info">
+                            <small>Writing Materials</small>
+                            <h5>Premium Ballpoint Pens</h5>
+
+                            <div class="product-bottom">
+                                <strong>KSh 150</strong>
+
+                                <button class="add-cart-btn" aria-label="Add pens to cart">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- PRODUCT 3 -->
+                <div class="col-6 col-lg-3">
+                    <div class="product-card">
+
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600"
+                                alt="Calculator">
+
+                        </div>
+
+                        <div class="product-info">
+                            <small>Calculators</small>
+                            <h5>Scientific Calculator</h5>
+
+                            <div class="product-bottom">
+                                <strong>KSh 1,200</strong>
+
+                                <button class="add-cart-btn" aria-label="Add calculator to cart">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- PRODUCT 4 -->
+                <div class="col-6 col-lg-3">
+                    <div class="product-card">
+
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600"
+                                alt="Paper">
+
+                        </div>
+
+                        <div class="product-info">
+                            <small>Paper Products</small>
+                            <h5>A4 Printing Paper</h5>
+
+                            <div class="product-bottom">
+                                <strong>KSh 650</strong>
+
+                                <button class="add-cart-btn" aria-label="Add paper to cart">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ABOUT / BENEFITS SECTION -->
+    <section class="benefits-section" id="about">
+
+        <div class="container">
+
+            <div class="text-center benefits-heading">
+                <span class="section-label">WHY CAMPUSSTATIONERY?</span>
+                <h2>Making Student Life Easier.</h2>
+            </div>
+
+
+            <div class="row g-4">
+
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <i class="bi bi-wallet2"></i>
+                        <h5>Student-Friendly Prices</h5>
+                        <p>
+                            Get the stationery you need at prices
+                            that work with your budget.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <i class="bi bi-bag-check"></i>
+                        <h5>Easy Ordering</h5>
+                        <p>
+                            Browse products and place your orders
+                            through a simple online experience.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="col-md-4">
+                    <div class="benefit-card">
+                        <i class="bi bi-book"></i>
+                        <h5>Everything in One Place</h5>
+                        <p>
+                            Find your everyday academic essentials
+                            without searching multiple stores.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="container">
+
+            <div class="row g-4">
+
+                <div class="col-lg-5">
+                    <a href="index.html" class="footer-brand">
+                        Campus<span>Stationery.</span>
+                    </a>
+
+                    <p>
+                        Your reliable campus bookstore for all
+                        your academic essentials.
+                    </p>
+                </div>
+
+
+                <div class="col-6 col-lg-3">
+                    <h6>Quick Links</h6>
+
+                    <a href="index.html">Home</a>
+                    <a href="pages/products.html">Shop</a>
+                    <a href="#categories">Categories</a>
+                    <a href="#about">About Us</a>
+                </div>
+
+
+                <div class="col-6 col-lg-4">
+                    <h6>Account</h6>
+
+                    <a href="pages/login.html">Login</a>
+                    <a href="pages/register.html">Create Account</a>
+                    <a href="pages/my-orders.html">My Orders</a>
+                    <a href="pages/cart.html">Shopping Cart</a>
+                </div>
+
+            </div>
+
+
+            <hr>
+
+            <div class="footer-bottom">
+                <p>
+                    &copy; <span id="currentYear"></span>
+                    CampusStationery. All rights reserved.
+                </p>
+
+                <p>Designed for the campus community.</p>
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="js/main.js"></script>
+
+</body>
+</html>

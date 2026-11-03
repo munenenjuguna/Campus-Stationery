@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Checkout | CampusStationery</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+
+            <a class="navbar-brand" href="../index.html">
+                CampusStationery.
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html">Home</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="products.html">Shop</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#categories">Categories</a>
+                    </li>
+                </ul>
+
+                <div class="navbar-nav">
+                    <a href="login.html" class="nav-link">Login</a>
+
+                    <a href="cart.html" class="nav-link">
+                        <i class="bi bi-cart3"></i>
+                        Cart (<span id="cartCount">0</span>)
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- CHECKOUT HEADER -->
+    <section class="checkout-header">
+        <div class="container">
+
+            <p>
+                <a href="../index.html">Home</a> /
+                <a href="cart.html">Cart</a> /
+                Checkout
+            </p>
+
+            <h1>Checkout</h1>
+
+            <p>Almost there! Complete your details to place your order.</p>
+
+        </div>
+    </section>
+
+
+    <!-- CHECKOUT CONTENT -->
+    <section class="checkout-section">
+        <div class="container">
+
+            <div class="row g-4">
+
+                <!-- CUSTOMER DETAILS -->
+                <div class="col-lg-7">
+
+                    <div class="checkout-card">
+
+                        <h4>Customer Information</h4>
+
+                        <form id="checkoutForm">
+
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">
+                                    Full Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="fullName"
+                                    placeholder="Enter your full name"
+                                    required
+                                >
+                            </div>
+
+
+                            <div class="row">
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label for="email" class="form-label">
+                                        Email Address
+                                    </label>
+
+                                    <input
+                                        type="email"
+                                        class="form-control"
+                                        id="email"
+                                        placeholder="example@email.com"
+                                        required
+                                    >
+
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label for="phone" class="form-label">
+                                        Phone Number
+                                    </label>
+
+                                    <input
+                                        type="tel"
+                                        class="form-control"
+                                        id="phone"
+                                        placeholder="07XXXXXXXX"
+                                        pattern="^(?:\+254|254|0)7[0-9]{8}$"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <hr class="my-4">
+
+
+                            <!-- DELIVERY -->
+                            <h4>Delivery Information</h4>
+
+                            <div class="mb-3">
+
+                                <label for="deliveryMethod" class="form-label">
+                                    How would you like to receive your order?
+                                </label>
+
+                                <select class="form-select" id="deliveryMethod" required>
+
+                                    <option value="">Select an option</option>
+
+                                    <option value="Campus Pickup">
+                                        Campus Pickup
+                                    </option>
+
+                                    <option value="Campus Delivery">
+                                        Campus Delivery
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="mb-3" id="locationGroup" style="display: none;">
+
+                                <label for="location" class="form-label">
+                                    Delivery Location
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="location"
+                                    placeholder="Enter your campus location"
+                                >
+
+                            </div>
+
+
+                            <hr class="my-4">
+
+
+                            <!-- PAYMENT -->
+                            <h4>Payment Method</h4>
+
+                            <div class="payment-option">
+
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="M-Pesa"
+                                        required
+                                    >
+
+                                    <span>
+                                        <i class="bi bi-phone"></i>
+                                        M-Pesa
+                                    </span>
+                                </label>
+
+                            </div>
+
+                            <div class="payment-option">
+
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name="paymentMethod"
+                                        value="Cash on Collection"
+                                    >
+
+                                    <span>
+                                        <i class="bi bi-cash"></i>
+                                        Cash on Collection
+                                    </span>
+                                </label>
+
+                            </div>
+
+
+                            <div class="checkout-notice">
+                                <i class="bi bi-info-circle"></i>
+
+                                Payment processing will be connected in a
+                                later development stage.
+                            </div>
+
+
+                            <button type="submit" class="btn btn-primary w-100 mt-4">
+
+                                Place Order
+                                <i class="bi bi-arrow-right"></i>
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORDER SUMMARY -->
+                <div class="col-lg-5">
+
+                    <div class="checkout-summary">
+
+                        <h4>Order Summary</h4>
+
+                        <div id="checkoutItems"></div>
+
+                        <hr>
+
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="checkoutSubtotal">KSh 0</span>
+                        </div>
+
+                        <div class="summary-row">
+                            <span>Delivery</span>
+                            <span id="deliveryCost">KSh 0</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span id="checkoutTotal">KSh 0</span>
+                        </div>
+
+                        <a href="cart.html" class="edit-cart-link">
+                            <i class="bi bi-pencil"></i>
+                            Edit Cart
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDER SUCCESS MESSAGE -->
+            <div id="orderSuccess" class="order-success" style="display: none;">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                <h2>Order Placed Successfully!</h2>
+
+                <p>
+                    Thank you for shopping with CampusStationery.
+                    Your order has been recorded.
+                </p>
+
+                <p>
+                    Order Reference:
+                    <strong id="orderReference"></strong>
+                </p>
+
+                <a href="products.html" class="btn btn-primary">
+                    Continue Shopping
+                </a>
+
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="container">
+
+            <div class="row">
+
+                <div class="col-md-6">
+                    <h4>CampusStationery.</h4>
+                    <p>Your one-stop campus bookstore for all your academic essentials.</p>
+                </div>
+
+                <div class="col-md-3">
+                    <h5>Quick Links</h5>
+                    <a href="../index.html">Home</a>
+                    <a href="products.html">Shop</a>
+                </div>
+
+                <div class="col-md-3">
+                    <h5>Contact</h5>
+                    <p>Email: info@campusstationery.com</p>
+                </div>
+
+            </div>
+
+            <hr>
+
+            <p class="text-center mb-0">
+                &copy; <span id="currentYear"></span> CampusStationery. All rights reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="../js/main.js"></script>
+
+    <script src="../js/checkout.js"></script>
+
+</body>
+</html>
