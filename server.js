@@ -6,7 +6,9 @@ const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
-
+const path = require('path');
+app.use('/api/admin', require('./routes/admin'));
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
 // Middleware
 app.use(cors());
 app.use(express.json());
