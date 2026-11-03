@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const productRoutes = require('./routes/productRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 
 // API Endpoints
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
