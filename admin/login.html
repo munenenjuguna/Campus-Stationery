@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | CampusStationery</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="login-page">
+    <section class="login-art">
+      <div class="brand"><span class="brand-mark"><i class="fa-solid fa-pen-ruler"></i></span> CampusStationery</div>
+      <div>
+        <h1>Run the shop from one place.</h1>
+        <p>Manage products, stock, orders and customers. Every change is checked, saved straight to the database and recorded in the audit trail.</p>
+      </div>
+      <p class="small mb-0">&copy; <span id="year"></span> CampusStationery Admin</p>
+    </section>
+
+    <section class="login-form-wrap">
+      <div class="login-card">
+        <div class="brand d-lg-none mb-4"><span class="brand-mark"><i class="fa-solid fa-pen-ruler"></i></span> CampusStationery</div>
+        <h3 class="fw-bold mb-1">Admin sign in</h3>
+        <p class="text-secondary mb-4">Only staff accounts can access this panel.</p>
+
+        <div id="alert" class="alert alert-danger d-none" role="alert"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-regular fa-envelope"></i></span>
+              <input type="email" class="form-control" id="email" autocomplete="username" required autofocus>
+            </div>
+            <div class="invalid-feedback d-block" id="emailErr"></div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+              <input type="password" class="form-control" id="password" autocomplete="current-password" required>
+              <button class="btn btn-outline-secondary" type="button" id="togglePw" title="Show or hide password"><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <div class="invalid-feedback d-block" id="pwErr"></div>
+            <div class="form-text text-warning d-none" id="capsWarn"><i class="fa-solid fa-triangle-exclamation"></i> Caps Lock is on</div>
+          </div>
+          <button class="btn btn-accent w-100 py-2" id="loginBtn" type="submit">
+            <span class="spinner-border spinner-border-sm d-none me-2" id="spin"></span>Sign in
+          </button>
+        </form>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <span class="db-status"><span class="dot" id="dbDot"></span><span id="dbText">Checking database...</span></span>
+          <a href="../index.html" class="small text-decoration-none">Back to shop</a>
+        </div>
+        <p class="small text-secondary mt-3 mb-0">Forgot your password? Ask a super admin to reset it from Admin Accounts.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const API = '/api/admin';
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Already logged in? go straight to the dashboard
+    if (sessionStorage.getItem('adminToken')) location.href = 'index.html';
+
+    // Database connection indicator
+    fetch(API + '/status').then(r => r.json()).then(d => {
+      const ok = d && d.ok;
+      document.getElementById('dbDot').className = 'dot ' + (ok ? 'ok' : 'bad');
+      document.getElementById('dbText').textContent = ok ? 'Connected to database: ' + d.database : (d.error || 'Database not connected');
+    }).catch(() => {
+      document.getElementById('dbDot').className = 'dot bad';
+      document.getElementById('dbText').textContent = 'Server not reachable';
+    });
+
+    const pw = document.getElementById('password');
+    document.getElementById('togglePw').onclick = () => {
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+      document.querySelector('#togglePw i').className = pw.type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+    };
+    pw.addEventListener('keyup', e => {
+      document.getElementById('capsWarn').classList.toggle('d-none', !(e.getModifierState && e.getModifierState('CapsLock')));
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = pw.value;
+      const alertBox = document.getElementById('alert');
+      alertBox.classList.add('d-none');
+      document.getElementById('emailErr').textContent = '';
+      document.getElementById('pwErr').textContent = '';
+
+      let valid = true;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('emailErr').textContent = 'Enter a valid email address.'; valid = false; }
+      if (!password) { document.getElementById('pwErr').textContent = 'Enter your password.'; valid = false; }
+      if (!valid) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true; document.getElementById('spin').classList.remove('d-none');
+      try {
+        const res = await fetch(API + '/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed.');
+        sessionStorage.setItem('adminToken', data.token);
+        sessionStorage.setItem('adminUser', JSON.stringify(data.admin));
+        if (data.usingDefaultPassword) sessionStorage.setItem('adminDefaultPw', '1');
+        location.href = 'index.html';
+      } catch (err) {
+        alertBox.textContent = err.message;
+        alertBox.classList.remove('d-none');
+      } finally {
+        btn.disabled = false; document.getElementById('spin').classList.add('d-none');
+      }
+    });
+  </script>
+</body>
+</html>
