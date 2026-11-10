@@ -99,7 +99,7 @@ const productId = Number(urlParams.get("id"));
 
 // FIND SELECTED PRODUCT
 
-const selectedProduct = products.find(
+let selectedProduct = products.find(
     product => product.id === productId
 );
 
@@ -398,6 +398,7 @@ function setupQuantityControls() {
 
         localStorage.setItem("cart", JSON.stringify(cart));
 
+        updateCartCount();
 
         alert(`${selectedProduct.name} added to your cart!`);
 
@@ -406,6 +407,49 @@ function setupQuantityControls() {
 }
 
 
+// CART COUNT IN THE HEADER
+
+function updateCartCount() {
+
+    const cartCount = document.getElementById("cartCount");
+
+    if (!cartCount) return;
+
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    cartCount.textContent = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
+}
+
+
 // INITIALISE PAGE
 
 displayProductDetails();
+
+updateCartCount();
+
+
+// LOAD THIS PRODUCT FROM THE DATABASE
+// Uses the live record from MySQL when the backend is running,
+// so products added or edited in the admin panel open correctly.
+fetch("http://localhost:5000/api/products")
+    .then(response => response.json())
+    .then(result => {
+        if (!result.success || !Array.isArray(result.data)) return;
+        const row = result.data.find(item => Number(item.id) === productId);
+        if (!row) return;
+        const sample = selectedProduct || {};
+        selectedProduct = {
+            ...sample,
+            id: Number(row.id),
+            name: row.name,
+            category: String(row.category || "accessories").toLowerCase(),
+            price: Number(row.price),
+            stock: Number(row.stock_quantity ?? row.stock ?? 0),
+            image: row.image || sample.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
+            description: row.description || sample.description || ""
+        };
+        displayProductDetails();
+    })
+    .catch(() => {
+        console.warn("Backend not reachable, showing sample product data instead.");
+    });

@@ -22,6 +22,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Campus Stationery API Server is running!' });
 });
 
+// Customer website: serve only the public folders (never config/ or .env)
+['assets', 'css', 'js', 'pages'].forEach(folder => {
+  app.use('/' + folder, express.static(path.join(__dirname, folder)));
+});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

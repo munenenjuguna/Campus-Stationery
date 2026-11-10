@@ -493,17 +493,17 @@ async function printReport() {
     const w = window.open('', '_blank');
     if (!w) return toast('Allow pop ups for this site to print reports.', 'warning');
     const now = new Date().toLocaleString('en-KE', { dateStyle: 'full', timeStyle: 'short' });
-    w.document.write(`<!DOCTYPE html><html><head><title>${esc(pretty(t.name))} report</title>
+    w.document.write(`<!DOCTYPE html><html><head><title>${esc(pretty(t.name))} report</title><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
       <style>
-        body{font-family:Segoe UI,Arial,sans-serif;color:#1d2433;margin:32px}
-        .head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #f2a900;padding-bottom:14px;margin-bottom:18px}
-        .logo{width:48px;height:48px;border-radius:12px;background:#17203a;color:#f2a900;display:grid;place-items:center;font-weight:900;font-size:20px}
-        h1{margin:0;font-size:22px} h2{margin:2px 0 0;font-size:15px;font-weight:500;color:#555}
+        body{font-family:'DM Sans',Arial,sans-serif;color:#263238;margin:32px}
+        .head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #e58b45;padding-bottom:14px;margin-bottom:18px}
+        .logo{width:48px;height:48px;border-radius:50%;background:#172b4d;color:#e58b45;display:grid;place-items:center;font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:20px}
+        h1{margin:0;font-size:24px;font-family:'Playfair Display',Georgia,serif;color:#172b4d} h2{margin:2px 0 0;font-size:15px;font-weight:500;color:#555}
         .meta{font-size:12px;color:#555;margin-bottom:14px}
         table{width:100%;border-collapse:collapse;font-size:12px}
-        th{background:#17203a;color:#fff;text-align:left;padding:7px}
+        th{background:#172b4d;color:#fff;text-align:left;padding:8px}
         td{padding:6px 7px;border-bottom:1px solid #e5e7ef}
-        tr:nth-child(even) td{background:#f8f9fc}
+        tr:nth-child(even) td{background:#faf8f3}
         .foot{margin-top:18px;font-size:11px;color:#777;display:flex;justify-content:space-between}
         @media print{button{display:none}}
       </style></head><body>

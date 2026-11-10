@@ -95,7 +95,7 @@ function displayProducts(productList) {
     productContainer.innerHTML = "";
 
     // Update number of products displayed
-    productCount.textContent = `${productList.length} products found`;
+    productCount.textContent = productList.length;
 
     // Show empty state if no products match
     if (productList.length === 0) {
@@ -109,61 +109,52 @@ function displayProducts(productList) {
 
         const productCard = document.createElement("div");
 
-        productCard.className = "col-md-6 col-lg-4 col-xl-3 mb-4";
+        productCard.className = "col-sm-6 col-xl-4 mb-4";
 
+        const inStock = product.stock > 0;
+        const categoryNames = {
+            notebooks: "Notebooks",
+            writing: "Writing Materials",
+            calculators: "Calculators",
+            paper: "Paper Products",
+            accessories: "Accessories"
+        };
+
+        // Card uses the catalog styles in css/style.css so it matches the rest of the site
         productCard.innerHTML = `
-            <div class="product-card h-100">
+            <div class="catalog-product">
 
-                <a href="product-details.html?id=${product.id}">
-                    <img 
-                        src="${product.image}" 
-                        alt="${product.name}"
-                        class="product-image"
-                    >
+                <a href="product-details.html?id=${product.id}" class="catalog-product-image d-block">
+                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                    <span class="stock-badge ${inStock ? "in-stock" : "out-of-stock"}">
+                        ${inStock ? `${product.stock} in stock` : "Out of stock"}
+                    </span>
                 </a>
 
-                <div class="product-card-body">
+                <div class="catalog-product-info">
 
-                    <p class="product-category">
-                        ${product.category}
-                    </p>
+                    <small>${categoryNames[product.category] || product.category}</small>
 
                     <h5>
-                        <a 
-                            href="product-details.html?id=${product.id}"
-                            class="product-title-link"
-                        >
+                        <a href="product-details.html?id=${product.id}" class="text-reset text-decoration-none">
                             ${product.name}
                         </a>
                     </h5>
 
-                    <p class="product-description">
-                        ${product.description}
-                    </p>
+                    <p class="description mb-0">${product.description}</p>
 
-                    <h5 class="product-price">
-                        KSh ${product.price.toLocaleString("en-KE")}
-                    </h5>
+                    <div class="catalog-product-bottom">
+                        <strong class="text-nowrap">KSh ${product.price.toLocaleString("en-KE")}</strong>
 
-                    <p class="${product.stock > 0 ? "text-success" : "text-danger"}">
-                        ${
-                            product.stock > 0
-                            ? `${product.stock} available`
-                            : "Out of stock"
-                        }
-                    </p>
-
-                    <button 
-                        class="btn btn-primary w-100 add-to-cart-btn"
-                        data-id="${product.id}"
-                        ${product.stock === 0 ? "disabled" : ""}
-                    >
-                        ${
-                            product.stock > 0
-                            ? "Add to Cart"
-                            : "Out of Stock"
-                        }
-                    </button>
+                        <button
+                            class="catalog-add-btn add-to-cart-btn text-nowrap"
+                            data-id="${product.id}"
+                            ${inStock ? "" : "disabled"}
+                        >
+                            <i class="bi ${inStock ? "bi-bag-plus" : "bi-x-circle"}"></i>
+                            ${inStock ? "Add to Cart" : "Sold Out"}
+                        </button>
+                    </div>
 
                 </div>
             </div>
@@ -389,3 +380,36 @@ if (categoryFromURL && validCategories.includes(categoryFromURL)) {
 filterProducts();
 
 updateCartCount();
+
+
+// 11. LOAD LIVE PRODUCTS FROM THE DATABASE
+// The list at the top is only a fallback. When the backend is running,
+// products come from MySQL through GET /api/products, so changes made in
+// the admin panel (new products, prices, stock) show here after a refresh.
+const API_BASE = "http://localhost:5000";
+
+function mapDatabaseProduct(row) {
+    const sample = products.find(p => p.id === Number(row.id)) || {};
+    return {
+        id: Number(row.id),
+        name: row.name,
+        category: String(row.category || "accessories").toLowerCase(),
+        price: Number(row.price),
+        stock: Number(row.stock_quantity ?? row.stock ?? 0),
+        image: row.image || sample.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
+        description: row.description || sample.description || ""
+    };
+}
+
+fetch(API_BASE + "/api/products")
+    .then(response => response.json())
+    .then(result => {
+        if (!result.success || !Array.isArray(result.data)) return;
+        const liveProducts = result.data.map(mapDatabaseProduct);
+        products.length = 0;
+        products.push(...liveProducts);
+        filterProducts();
+    })
+    .catch(() => {
+        console.warn("Backend not reachable, showing sample products instead.");
+    });

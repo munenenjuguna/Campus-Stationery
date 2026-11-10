@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 // POST /api/users/register - Register a new user
 router.post('/register', async (req, res) => {
@@ -18,10 +19,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is already registered.' });
     }
 
+    // Hash the password before saving (never store plain text)
+    const passwordHash = await bcrypt.hash(password, 10);
+
     // Insert new user
     const [result] = await db.query(
       'INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)',
-      [full_name, email, password, role || 'student']
+      [full_name, email, passwordHash, role || 'student']
     );
 
     res.status(201).json({
@@ -45,7 +49,18 @@ router.post('/login', async (req, res) => {
   try {
     const [users] = await db.query('SELECT id, full_name, email, role, password FROM users WHERE email = ?', [email]);
     
-    if (users.length === 0 || users[0].password !== password) {
+    if (users.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials.' });
+    }
+
+    // Compare against the bcrypt hash. Older accounts saved before hashing was added
+    // still have plain text passwords, so those are checked directly.
+    const stored = users[0].password || '';
+    const passwordOk = stored.startsWith('$2')
+      ? await bcrypt.compare(password, stored)
+      : stored === password;
+
+    if (!passwordOk) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 

@@ -12,7 +12,7 @@ const pool = mysql.createPool({
   port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || process.env.DB_PASS || '',
-  database: process.env.DB_NAME || process.env.DB_DATABASE || 'campus_stationery',
+  database: process.env.DB_NAME || process.env.DB_DATABASE || 'school_project_db',
   waitForConnections: true,
   connectionLimit: 5,
   dateStrings: true // keep DATE/DATETIME as plain strings so dates never shift by timezone

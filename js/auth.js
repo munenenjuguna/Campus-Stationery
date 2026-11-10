@@ -42,6 +42,11 @@ document.querySelectorAll(".password-toggle").forEach(button => {
 });
 
 
+// BACKEND ADDRESS FOR ACCOUNT REQUESTS
+
+const AUTH_API = "http://localhost:5000/api/users";
+
+
 // 2. DISPLAY MESSAGES
 
 function showMessage(element, message, type) {
@@ -92,11 +97,44 @@ if (loginForm) {
         }
 
 
-        showMessage(
-            message,
-            "Your details have been validated. Account authentication will be connected to the backend.",
-            "success"
-        );
+        // Check the account against the database through the backend API
+        const submitButton = loginForm.querySelector('button[type="submit"]');
+
+        if (submitButton) submitButton.disabled = true;
+
+        showMessage(message, "Signing you in...", "success");
+
+        fetch(`${AUTH_API}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: email.value.trim(),
+                password: password.value
+            })
+        })
+            .then(response => response.json())
+            .then(result => {
+
+                if (!result.success) {
+                    showMessage(message, result.message || "Invalid email or password.", "error");
+                    return;
+                }
+
+                // Remember who is logged in for the rest of the site
+                localStorage.setItem("currentUser", JSON.stringify(result.user));
+
+                showMessage(message, `Welcome back, ${result.user.full_name}! Taking you to the shop...`, "success");
+
+                setTimeout(() => {
+                    window.location.href = "products.html";
+                }, 1200);
+            })
+            .catch(() => {
+                showMessage(message, "Cannot reach the server. Make sure the backend is running (npm start).", "error");
+            })
+            .finally(() => {
+                if (submitButton) submitButton.disabled = false;
+            });
 
     });
 
@@ -236,11 +274,44 @@ if (registerForm) {
 
         // Display successful frontend validation
 
-        showMessage(
-            message,
-            "Your information is valid. Account registration will be connected to the backend.",
-            "success"
-        );
+        // Save the new account in the database through the backend API
+        const submitButton = registerForm.querySelector('button[type="submit"]');
+
+        if (submitButton) submitButton.disabled = true;
+
+        showMessage(message, "Creating your account...", "success");
+
+        fetch(`${AUTH_API}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                full_name: fullName.value.trim(),
+                email: email.value.trim(),
+                password: password.value
+            })
+        })
+            .then(response => response.json())
+            .then(result => {
+
+                if (!result.success) {
+                    showMessage(message, result.message || "Registration failed. Please try again.", "error");
+                    return;
+                }
+
+                showMessage(message, "Account created! Taking you to the login page...", "success");
+
+                registerForm.reset();
+
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 1500);
+            })
+            .catch(() => {
+                showMessage(message, "Cannot reach the server. Make sure the backend is running (npm start).", "error");
+            })
+            .finally(() => {
+                if (submitButton) submitButton.disabled = false;
+            });
 
     });
 
