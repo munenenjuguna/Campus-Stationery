@@ -1,0 +1,37 @@
+# render.yaml
+# Hosting blueprint for Render (render.com). In the Render dashboard choose
+# New, then Blueprint, and pick this repository. Render reads this file, asks for the
+# database details marked "sync: false", builds the app and gives it a public https address.
+# The step by step guide is in docs/CampusStationery_User_Manual.docx (section 6) and README.md.
+
+services:
+  - type: web
+    name: campus-stationery
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Signs login tokens and encrypts authenticator app keys. Render creates a random value once.
+      - key: APP_SECRET
+        generateValue: true
+      # Online MySQL database (for example TiDB Cloud Starter). Copy these from the database's Connect page.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: school_project_db
+      # Online databases only accept encrypted connections
+      - key: DB_SSL
+        value: "true"
+      # Kenya time for order dates and "today" in reports
+      - key: DB_TIMEZONE
+        value: "+03:00"

@@ -201,6 +201,12 @@ function changeQuantity(productId, action) {
 
     if (action === "increase") {
 
+        // Never let the cart go over the stock available
+        if (item.stock !== undefined && item.quantity >= item.stock) {
+            CS.toast(`Only ${item.stock} of ${item.name} available.`, "error");
+            return;
+        }
+
         item.quantity++;
 
     } else if (action === "decrease") {
@@ -275,3 +281,40 @@ cartItemsContainer.addEventListener("click", function(event) {
 // 11. INITIAL DISPLAY
 
 displayCart();
+
+
+// 12. CHECK THE CART AGAINST THE DATABASE
+// Prices and stock may have changed since items were added, so refresh them from the server.
+CS.request("/api/products")
+    .then(result => {
+        const live = new Map(result.data.map(p => [Number(p.id), p]));
+        const notes = [];
+
+        cart = cart.filter(item => {
+            const product = live.get(Number(item.id));
+            if (!product || Number(product.stock_quantity) === 0) {
+                notes.push(`${item.name} is no longer available and was removed.`);
+                return false;
+            }
+            const stock = Number(product.stock_quantity);
+            if (item.quantity > stock) {
+                notes.push(`Only ${stock} of ${product.name} left, so your quantity was reduced.`);
+                item.quantity = stock;
+            }
+            if (Number(product.price) !== Number(item.price)) {
+                notes.push(`The price of ${product.name} changed to ${CS.formatPrice(product.price)}.`);
+            }
+            item.name = product.name;
+            item.price = Number(product.price);
+            item.stock = stock;
+            item.image = product.image || item.image;
+            return true;
+        });
+
+        saveCart();
+        displayCart();
+        notes.forEach(note => CS.toast(note, "info"));
+    })
+    .catch(() => {
+        // Show the saved cart even if the server is not reachable
+    });

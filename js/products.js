@@ -3,81 +3,9 @@
 // ==========================================
 
 // 1. PRODUCT DATA
-const products = [
-    {
-        id: 1,
-        name: "A5 Hardcover Notebook",
-        category: "notebooks",
-        price: 350,
-        stock: 25,
-        image: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600",
-        description: "A durable hardcover notebook suitable for everyday lectures and note-taking."
-    },
-    {
-        id: 2,
-        name: "Premium Ballpoint Pens",
-        category: "writing",
-        price: 150,
-        stock: 40,
-        image: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600",
-        description: "A set of smooth-writing ballpoint pens for school and office use."
-    },
-    {
-        id: 3,
-        name: "Scientific Calculator",
-        category: "calculators",
-        price: 1200,
-        stock: 12,
-        image: "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=600",
-        description: "A scientific calculator for mathematical and scientific calculations."
-    },
-    {
-        id: 4,
-        name: "A4 Printing Paper",
-        category: "paper",
-        price: 650,
-        stock: 30,
-        image: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600",
-        description: "Quality A4 paper suitable for printing, assignments and photocopying."
-    },
-    {
-        id: 5,
-        name: "Student Backpack",
-        category: "accessories",
-        price: 1800,
-        stock: 8,
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600",
-        description: "A practical backpack for carrying books, stationery and other essentials."
-    },
-    {
-        id: 6,
-        name: "Spiral Notebook",
-        category: "notebooks",
-        price: 200,
-        stock: 0,
-        image: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=600",
-        description: "A lightweight spiral notebook for everyday classroom notes."
-    },
-    {
-        id: 7,
-        name: "Pencil Set",
-        category: "writing",
-        price: 100,
-        stock: 50,
-        image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600",
-        description: "A useful pencil set for writing, drawing and sketching."
-    },
-    {
-        id: 8,
-        name: "Graphing Calculator",
-        category: "calculators",
-        price: 1900,
-        stock: 5,
-        image: "https://images.unsplash.com/photo-1564473185935-58113cba1e80?w=600",
-        description: "A graphing calculator designed for advanced mathematical work."
-    }
-];
-
+// Filled from the database through GET /api/products (see section 8 at the bottom).
+const products = [];
+let productsLoaded = false;
 
 // 2. GET HTML ELEMENTS
 const productContainer = document.getElementById("productContainer");
@@ -112,39 +40,34 @@ function displayProducts(productList) {
         productCard.className = "col-sm-6 col-xl-4 mb-4";
 
         const inStock = product.stock > 0;
-        const categoryNames = {
-            notebooks: "Notebooks",
-            writing: "Writing Materials",
-            calculators: "Calculators",
-            paper: "Paper Products",
-            accessories: "Accessories"
-        };
+        const lowStock = inStock && product.stock <= 10;
+        const name = CS.escapeHtml(product.name);
 
         // Card uses the catalog styles in css/style.css so it matches the rest of the site
         productCard.innerHTML = `
             <div class="catalog-product">
 
                 <a href="product-details.html?id=${product.id}" class="catalog-product-image d-block">
-                    <img src="${product.image}" alt="${product.name}" loading="lazy">
-                    <span class="stock-badge ${inStock ? "in-stock" : "out-of-stock"}">
-                        ${inStock ? `${product.stock} in stock` : "Out of stock"}
+                    <img src="${CS.escapeHtml(product.image)}" alt="${name}" loading="lazy">
+                    <span class="stock-badge ${inStock ? (lowStock ? "low-stock" : "in-stock") : "out-of-stock"}">
+                        ${inStock ? (lowStock ? `Only ${product.stock} left` : `${product.stock} in stock`) : "Out of stock"}
                     </span>
                 </a>
 
                 <div class="catalog-product-info">
 
-                    <small>${categoryNames[product.category] || product.category}</small>
+                    <small>${CS.escapeHtml(product.categoryName)}</small>
 
                     <h5>
                         <a href="product-details.html?id=${product.id}" class="text-reset text-decoration-none">
-                            ${product.name}
+                            ${name}
                         </a>
                     </h5>
 
-                    <p class="description mb-0">${product.description}</p>
+                    <p class="description mb-0">${CS.escapeHtml(product.description)}</p>
 
                     <div class="catalog-product-bottom">
-                        <strong class="text-nowrap">KSh ${product.price.toLocaleString("en-KE")}</strong>
+                        <strong class="text-nowrap">${CS.formatPrice(product.price)}</strong>
 
                         <button
                             class="catalog-add-btn add-to-cart-btn text-nowrap"
@@ -177,7 +100,8 @@ function filterProducts() {
 
         filteredProducts = filteredProducts.filter(product =>
             product.name.toLowerCase().includes(searchValue) ||
-            product.category.toLowerCase().includes(searchValue)
+            product.categoryName.toLowerCase().includes(searchValue) ||
+            product.description.toLowerCase().includes(searchValue)
         );
     }
 
@@ -246,62 +170,10 @@ function filterProducts() {
 
 
 // 5. ADD PRODUCTS TO CART
+// Uses the shared cart in js/api.js, which never lets the quantity go over the stock available.
 function addToCart(productId) {
-
     const product = products.find(p => p.id === productId);
-
-    if (!product || product.stock === 0) {
-        return;
-    }
-
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    const existingProduct = cart.find(item => item.id === productId);
-
-    if (existingProduct) {
-
-        if (existingProduct.quantity >= product.stock) {
-            alert("You cannot add more than the available stock.");
-            return;
-        }
-
-        existingProduct.quantity++;
-
-    } else {
-
-        cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            quantity: 1
-        });
-    }
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-
-    alert(`${product.name} added to cart!`);
-
-    updateCartCount();
-}
-
-
-// 6. UPDATE CART COUNT
-function updateCartCount() {
-
-    const cartCount = document.getElementById("cartCount");
-
-    if (!cartCount) {
-        return;
-    }
-
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    const totalItems = cart.reduce((total, item) => {
-        return total + item.quantity;
-    }, 0);
-
-    cartCount.textContent = totalItems;
+    CS.addToCart(product, 1);
 }
 
 
@@ -377,39 +249,48 @@ if (categoryFromURL && validCategories.includes(categoryFromURL)) {
 
 
 // 10. INITIAL DISPLAY
-filterProducts();
-
-updateCartCount();
-
-
-// 11. LOAD LIVE PRODUCTS FROM THE DATABASE
-// The list at the top is only a fallback. When the backend is running,
-// products come from MySQL through GET /api/products, so changes made in
-// the admin panel (new products, prices, stock) show here after a refresh.
-const API_BASE = "http://localhost:5000";
-
+// 8. LOAD PRODUCTS FROM THE DATABASE
+// Changes made in the admin panel (new products, prices, stock) show here after a refresh.
 function mapDatabaseProduct(row) {
-    const sample = products.find(p => p.id === Number(row.id)) || {};
     return {
         id: Number(row.id),
         name: row.name,
-        category: String(row.category || "accessories").toLowerCase(),
+        category: row.category,
+        categoryName: row.category_name || row.category,
         price: Number(row.price),
-        stock: Number(row.stock_quantity ?? row.stock ?? 0),
-        image: row.image || sample.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
-        description: row.description || sample.description || ""
+        stock: Number(row.stock_quantity || 0),
+        image: row.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
+        description: row.description || ""
     };
 }
 
-fetch(API_BASE + "/api/products")
-    .then(response => response.json())
+// Opening products.html?category=notebooks (from the home page) pre-selects that category
+const startCategory = new URLSearchParams(location.search).get("category");
+if (startCategory) {
+    const radio = document.querySelector(`input[name="category"][value="${CSS.escape(startCategory)}"]`);
+    if (radio) radio.checked = true;
+}
+
+productContainer.innerHTML = `
+    <div class="col-12 text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div> Loading products...
+    </div>`;
+
+CS.request("/api/products")
     .then(result => {
-        if (!result.success || !Array.isArray(result.data)) return;
-        const liveProducts = result.data.map(mapDatabaseProduct);
-        products.length = 0;
-        products.push(...liveProducts);
+        products.push(...result.data.map(mapDatabaseProduct));
+        productsLoaded = true;
         filterProducts();
     })
-    .catch(() => {
-        console.warn("Backend not reachable, showing sample products instead.");
+    .catch(error => {
+        productCount.textContent = 0;
+        productContainer.innerHTML = `
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="bi bi-wifi-off"></i>
+                    <h4>Products could not be loaded</h4>
+                    <p>${CS.escapeHtml(error.message)}</p>
+                    <button class="btn-primary-custom border-0" onclick="location.reload()">Try again</button>
+                </div>
+            </div>`;
     });

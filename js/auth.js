@@ -42,9 +42,17 @@ document.querySelectorAll(".password-toggle").forEach(button => {
 });
 
 
-// BACKEND ADDRESS FOR ACCOUNT REQUESTS
+// Where to go after logging in (for example back to checkout)
+function nextPage() {
+    const next = new URLSearchParams(location.search).get("next");
+    // Only allow pages inside this site
+    return next && /^[a-z0-9-]+\.html(\?[^\s]*)?$/i.test(next) ? next : "products.html";
+}
 
-const AUTH_API = "http://localhost:5000/api/users";
+// Already logged in? Skip the login and register pages
+if (CS.isLoggedIn() && (document.getElementById("loginForm") || document.getElementById("registerForm"))) {
+    location.replace(nextPage());
+}
 
 
 // 2. DISPLAY MESSAGES
@@ -104,33 +112,24 @@ if (loginForm) {
 
         showMessage(message, "Signing you in...", "success");
 
-        fetch(`${AUTH_API}/login`, {
+        CS.request("/api/users/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                email: email.value.trim(),
-                password: password.value
-            })
+            body: { email: email.value.trim(), password: password.value }
         })
-            .then(response => response.json())
             .then(result => {
-
-                if (!result.success) {
-                    showMessage(message, result.message || "Invalid email or password.", "error");
+                // Two step verification is on for this account: ask for the code first
+                if (result.twoFactor) {
+                    message.textContent = "";
+                    message.className = "auth-message";
+                    startCodeStep(result);
                     return;
                 }
-
-                // Remember who is logged in for the rest of the site
-                localStorage.setItem("currentUser", JSON.stringify(result.user));
-
-                showMessage(message, `Welcome back, ${result.user.full_name}! Taking you to the shop...`, "success");
-
-                setTimeout(() => {
-                    window.location.href = "products.html";
-                }, 1200);
+                finishLogin(result, message);
             })
-            .catch(() => {
-                showMessage(message, "Cannot reach the server. Make sure the backend is running (npm start).", "error");
+            .catch(error => {
+                showMessage(message, error.message, "error");
+                password.value = "";
+                password.focus();
             })
             .finally(() => {
                 if (submitButton) submitButton.disabled = false;
@@ -138,6 +137,95 @@ if (loginForm) {
 
     });
 
+}
+
+
+// Saves the login and moves on to the page the customer wanted
+function finishLogin(result, message) {
+    // Remember who is logged in for the rest of the site
+    CS.saveSession(result.token, result.user);
+
+    showMessage(message, `Welcome back, ${result.user.full_name}! Taking you on...`, "success");
+
+    setTimeout(() => {
+        window.location.href = nextPage();
+    }, 900);
+}
+
+
+// 3B. TWO STEP VERIFICATION (second step of the login)
+
+const codeForm = document.getElementById("codeForm");
+let loginChallenge = null;
+
+function startCodeStep(result) {
+    loginChallenge = result.challenge;
+    document.getElementById("codeHint").textContent = result.message;
+    loginForm.classList.add("d-none");
+    codeForm.classList.remove("d-none");
+    const box = document.getElementById("loginCode");
+    box.value = "";
+    box.focus();
+}
+
+function backToLogin(text) {
+    loginChallenge = null;
+    codeForm.classList.add("d-none");
+    loginForm.classList.remove("d-none");
+    const password = document.getElementById("loginPassword");
+    password.value = "";
+    password.focus();
+    if (text) showMessage(document.getElementById("loginMessage"), text, "error");
+}
+
+if (codeForm) {
+
+    const codeBox = document.getElementById("loginCode");
+    const codeMessage = document.getElementById("codeMessage");
+
+    // Key trapping: digits only, and a complete code is sent straight away
+    CS.digitsOnly(codeBox, { max: 6 });
+    codeBox.addEventListener("input", () => {
+        if (codeBox.value.length === 6) codeForm.requestSubmit();
+    });
+
+    codeForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (!/^\d{6}$/.test(codeBox.value)) {
+            showMessage(codeMessage, "Please enter all 6 digits of the code.", "error");
+            return;
+        }
+        const button = codeForm.querySelector('button[type="submit"]');
+        button.disabled = true;
+        showMessage(codeMessage, "Checking your code...", "success");
+
+        CS.request("/api/users/login/verify", { method: "POST", body: { challenge: loginChallenge, code: codeBox.value } })
+            .then(result => finishLogin(result, codeMessage))
+            .catch(error => {
+                if (error.data && error.data.restart) return backToLogin(error.message);
+                showMessage(codeMessage, error.message, "error");
+                codeBox.select();
+            })
+            .finally(() => { button.disabled = false; });
+    });
+
+    document.getElementById("codeResend").addEventListener("click", event => {
+        event.preventDefault();
+        CS.request("/api/users/login/resend", { method: "POST", body: { challenge: loginChallenge } })
+            .then(result => {
+                document.getElementById("codeHint").textContent = result.message;
+                showMessage(codeMessage, "A new code is on its way.", "success");
+            })
+            .catch(error => {
+                if (error.data && error.data.restart) return backToLogin(error.message);
+                showMessage(codeMessage, error.message, "error");
+            });
+    });
+
+    document.getElementById("codeBack").addEventListener("click", event => {
+        event.preventDefault();
+        backToLogin();
+    });
 }
 
 
@@ -221,9 +309,9 @@ if (registerForm) {
         }
 
 
-        // Validate password length
+        // Validate password strength (same rule as the server: 8+ characters with letters and numbers)
 
-        if (password.value.length < 8) {
+        if (password.value.length < 8 || !/[A-Za-z]/.test(password.value) || !/\d/.test(password.value)) {
 
             password.classList.add("is-invalid");
 
@@ -281,33 +369,27 @@ if (registerForm) {
 
         showMessage(message, "Creating your account...", "success");
 
-        fetch(`${AUTH_API}/register`, {
+        CS.request("/api/users/register", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: {
                 full_name: fullName.value.trim(),
                 email: email.value.trim(),
+                phone: phone.value.trim(),
                 password: password.value
-            })
+            }
         })
-            .then(response => response.json())
-            .then(result => {
-
-                if (!result.success) {
-                    showMessage(message, result.message || "Registration failed. Please try again.", "error");
-                    return;
-                }
-
+            .then(() => {
                 showMessage(message, "Account created! Taking you to the login page...", "success");
 
+                const registeredEmail = email.value.trim();
                 registerForm.reset();
 
                 setTimeout(() => {
-                    window.location.href = "login.html";
-                }, 1500);
+                    window.location.href = `login.html?email=${encodeURIComponent(registeredEmail)}${location.search.includes("next=") ? "&" + location.search.slice(1) : ""}`;
+                }, 1300);
             })
-            .catch(() => {
-                showMessage(message, "Cannot reach the server. Make sure the backend is running (npm start).", "error");
+            .catch(error => {
+                showMessage(message, error.message, "error");
             })
             .finally(() => {
                 if (submitButton) submitButton.disabled = false;
@@ -315,4 +397,13 @@ if (registerForm) {
 
     });
 
+}
+
+
+// 5. PREFILL THE EMAIL AFTER REGISTERING
+
+const prefillEmail = new URLSearchParams(location.search).get("email");
+if (prefillEmail && document.getElementById("loginEmail")) {
+    document.getElementById("loginEmail").value = prefillEmail;
+    document.getElementById("loginPassword").focus();
 }

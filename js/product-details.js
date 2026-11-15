@@ -3,92 +3,8 @@
 // ======================================
 
 
-// SAMPLE PRODUCT DATA
-
-const products = [
-
-    {
-        id: 1,
-        name: "A5 Hardcover Notebook",
-        category: "Notebooks",
-        price: 350,
-        stock: 25,
-        image: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=600",
-        description: "A premium A5 hardcover notebook designed for everyday academic use. Perfect for lecture notes, personal planning and assignments."
-    },
-
-    {
-        id: 2,
-        name: "Premium Ballpoint Pens",
-        category: "Writing Materials",
-        price: 150,
-        stock: 40,
-        image: "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=600",
-        description: "A collection of smooth-writing ballpoint pens suitable for everyday writing, note-taking and examinations."
-    },
-
-    {
-        id: 3,
-        name: "Scientific Calculator",
-        category: "Calculators",
-        price: 1200,
-        stock: 12,
-        image: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600",
-        description: "A scientific calculator designed to support students with mathematical calculations and academic work."
-    },
-
-    {
-        id: 4,
-        name: "A4 Printing Paper",
-        category: "Paper Products",
-        price: 650,
-        stock: 30,
-        image: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600",
-        description: "Quality A4 printing paper suitable for assignments, printing, photocopying and everyday academic use."
-    },
-
-    {
-        id: 5,
-        name: "Student Backpack",
-        category: "Accessories",
-        price: 1800,
-        stock: 8,
-        image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600",
-        description: "A spacious backpack designed to carry notebooks, stationery and other everyday academic essentials."
-    },
-
-    {
-        id: 6,
-        name: "Spiral Notebook",
-        category: "Notebooks",
-        price: 200,
-        stock: 0,
-        image: "https://images.unsplash.com/photo-1517842645767-c639042777db?w=600",
-        description: "A lightweight spiral notebook ideal for lecture notes, quick reminders and everyday writing."
-    },
-
-    {
-        id: 7,
-        name: "Pencil Set",
-        category: "Writing Materials",
-        price: 100,
-        stock: 50,
-        image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600",
-        description: "A practical pencil set suitable for writing, sketching, drawing and other academic activities."
-    },
-
-    {
-        id: 8,
-        name: "Graphing Calculator",
-        category: "Calculators",
-        price: 1900,
-        stock: 5,
-        image: "https://images.unsplash.com/photo-1564473185935-58113cba1e80?w=600",
-        description: "An advanced calculator designed to support students with graphing and mathematical operations."
-    }
-
-];
-
+// PRODUCT DATA
+// The product is loaded from the database (see the bottom of this file).
 
 // GET PRODUCT ID FROM URL
 
@@ -97,11 +13,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const productId = Number(urlParams.get("id"));
 
 
-// FIND SELECTED PRODUCT
+// SELECTED PRODUCT (filled in after loading)
 
-let selectedProduct = products.find(
-    product => product.id === productId
-);
+let selectedProduct = null;
 
 
 // HTML CONTAINER
@@ -148,8 +62,8 @@ function displayProductDetails() {
                 <div class="details-image-container">
 
                     <img
-                        src="${selectedProduct.image}"
-                        alt="${selectedProduct.name}"
+                        src="${CS.escapeHtml(selectedProduct.image)}"
+                        alt="${CS.escapeHtml(selectedProduct.name)}"
                     >
 
                 </div>
@@ -165,24 +79,24 @@ function displayProductDetails() {
 
                     <span class="details-category">
 
-                        ${selectedProduct.category.toUpperCase()}
+                        ${CS.escapeHtml(selectedProduct.categoryName.toUpperCase())}
 
                     </span>
 
 
-                    <h1>${selectedProduct.name}</h1>
+                    <h1>${CS.escapeHtml(selectedProduct.name)}</h1>
 
 
                     <div class="details-price">
 
-                        KSh ${selectedProduct.price.toLocaleString("en-KE")}
+                        ${CS.formatPrice(selectedProduct.price)}
 
                     </div>
 
 
                     <p class="details-description">
 
-                        ${selectedProduct.description}
+                        ${CS.escapeHtml(selectedProduct.description)}
 
                     </p>
 
@@ -338,118 +252,45 @@ function setupQuantityControls() {
 
         const quantity = Number(quantityInput.value);
 
-        if (
-            !Number.isInteger(quantity) ||
-            quantity < 1 ||
-            quantity > selectedProduct.stock
-        ) {
-
-            alert("Please enter a valid quantity.");
-
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > selectedProduct.stock) {
+            CS.toast(`Please enter a quantity between 1 and ${selectedProduct.stock}.`, "error");
+            quantityInput.focus();
             return;
-
         }
 
-
-        // GET EXISTING CART
-
-        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-
-        // CHECK IF PRODUCT ALREADY EXISTS
-
-        const existingProduct = cart.find(
-            item => item.id === selectedProduct.id
-        );
-
-
-        if (existingProduct) {
-
-            if (existingProduct.quantity + quantity > selectedProduct.stock) {
-
-                alert("You cannot add more than the available stock.");
-
-                return;
-
-            }
-
-            existingProduct.quantity += quantity;
-
-        } else {
-
-            cart.push({
-
-                id: selectedProduct.id,
-
-                name: selectedProduct.name,
-
-                price: selectedProduct.price,
-
-                image: selectedProduct.image,
-
-                quantity: quantity
-
-            });
-
-        }
-
-
-        // SAVE CART
-
-        localStorage.setItem("cart", JSON.stringify(cart));
-
-        updateCartCount();
-
-        alert(`${selectedProduct.name} added to your cart!`);
+        // Shared cart helper: checks stock against what is already in the cart
+        CS.addToCart(selectedProduct, quantity);
 
     });
 
 }
-
-
-// CART COUNT IN THE HEADER
-
-function updateCartCount() {
-
-    const cartCount = document.getElementById("cartCount");
-
-    if (!cartCount) return;
-
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    cartCount.textContent = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
-}
-
-
-// INITIALISE PAGE
-
-displayProductDetails();
-
-updateCartCount();
 
 
 // LOAD THIS PRODUCT FROM THE DATABASE
-// Uses the live record from MySQL when the backend is running,
-// so products added or edited in the admin panel open correctly.
-fetch("http://localhost:5000/api/products")
-    .then(response => response.json())
-    .then(result => {
-        if (!result.success || !Array.isArray(result.data)) return;
-        const row = result.data.find(item => Number(item.id) === productId);
-        if (!row) return;
-        const sample = selectedProduct || {};
-        selectedProduct = {
-            ...sample,
-            id: Number(row.id),
-            name: row.name,
-            category: String(row.category || "accessories").toLowerCase(),
-            price: Number(row.price),
-            stock: Number(row.stock_quantity ?? row.stock ?? 0),
-            image: row.image || sample.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
-            description: row.description || sample.description || ""
-        };
-        displayProductDetails();
-    })
-    .catch(() => {
-        console.warn("Backend not reachable, showing sample product data instead.");
-    });
+
+productDetails.innerHTML = `
+    <div class="text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div> Loading product...
+    </div>`;
+
+if (!Number.isInteger(productId) || productId < 1) {
+    displayProductDetails();
+} else {
+    CS.request(`/api/products/${productId}`)
+        .then(result => {
+            const row = result.data;
+            selectedProduct = {
+                id: Number(row.id),
+                name: row.name,
+                category: row.category,
+                categoryName: row.category_name || row.category,
+                price: Number(row.price),
+                stock: Number(row.stock_quantity || 0),
+                image: row.image || "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=600",
+                description: row.description || ""
+            };
+            document.title = `${selectedProduct.name} | CampusStationery`;
+            displayProductDetails();
+        })
+        .catch(() => displayProductDetails());
+}

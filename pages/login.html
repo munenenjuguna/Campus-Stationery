@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Login | CampusStationery</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,7 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
     <!-- Main CSS -->
     <link rel="stylesheet" href="../css/style.css">
@@ -22,24 +23,8 @@
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white">
-        <div class="container">
-
-            <a class="navbar-brand" href="../index.html">
-                CampusStationery.
-            </a>
-
-            <div class="navbar-nav ms-auto">
-                <a href="products.html" class="nav-link">Shop</a>
-                <a href="cart.html" class="nav-link">
-                    <i class="bi bi-cart3"></i>
-                    Cart
-                </a>
-            </div>
-
-        </div>
-    </nav>
+    <!-- SHARED HEADER (filled in by js/layout.js) -->
+    <div id="siteHeader"></div>
 
 
     <!-- LOGIN SECTION -->
@@ -136,7 +121,7 @@
 
                         </div>
 
-                        <a href="#" class="forgot-password">
+                        <a href="forgot-password.html" class="forgot-password">
                             Forgot password?
                         </a>
 
@@ -150,6 +135,38 @@
                         Sign In
                         <i class="bi bi-arrow-right"></i>
                     </button>
+
+                </form>
+
+
+                <!-- STEP 2: TWO STEP VERIFICATION (shown only when the account has it switched on) -->
+                <form id="codeForm" class="d-none" novalidate>
+
+                    <div class="twofa-box mb-3">
+                        <i class="bi bi-shield-lock"></i>
+                        <div>
+                            <strong>Two step verification</strong>
+                            <p id="codeHint" class="mb-0">Enter the 6 digit code we sent you.</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="loginCode" class="form-label">6 digit code</label>
+                        <input type="text" class="form-control code-input" id="loginCode" inputmode="numeric"
+                            autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+                    </div>
+
+                    <div id="codeMessage" class="auth-message" role="alert"></div>
+
+                    <button type="submit" class="btn btn-primary w-100 auth-button">
+                        Verify and Sign In
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <div class="d-flex justify-content-between mt-3 small">
+                        <a href="#" id="codeBack"><i class="bi bi-arrow-left"></i> Back</a>
+                        <a href="#" id="codeResend">Send a new code</a>
+                    </div>
 
                 </form>
 
@@ -175,25 +192,16 @@
     </section>
 
 
-    <!-- FOOTER -->
-    <footer class="footer">
-
-        <div class="container">
-
-            <p class="text-center mb-0">
-                &copy; <span id="currentYear"></span> CampusStationery. All rights reserved.
-            </p>
-
-        </div>
-
-    </footer>
+    <!-- SHARED FOOTER (filled in by js/layout.js) -->
+    <div id="siteFooter"></div>
 
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main JS -->
-    <script src="../js/main.js"></script>
+    <!-- Shared helpers, header and footer -->
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
 
     <!-- Authentication JS -->
     <script src="../js/auth.js"></script>

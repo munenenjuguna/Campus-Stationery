@@ -3,9 +3,11 @@
 // ==========================================
 
 
-// 1. GET ORDERS FROM LOCAL STORAGE
+// 1. ORDERS (loaded from the database for the logged in customer, see section 11)
 
-let orders = JSON.parse(localStorage.getItem("orders")) || [];
+const loggedIn = CS.requireLogin();
+
+let orders = [];
 
 
 // 2. GET HTML ELEMENTS
@@ -76,8 +78,9 @@ function updateOrderOverview() {
 
     totalOrders.textContent = orders.length;
 
+    // "Open" orders are still being handled by the shop
     pendingOrders.textContent = orders.filter(order =>
-        order.status === "Pending"
+        ["Pending", "Processing", "Ready for Collection"].includes(order.status)
     ).length;
 
     completedOrders.textContent = orders.filter(order =>
@@ -158,10 +161,10 @@ function displayOrders() {
         const productImages = order.items.map(item => `
 
             <img
-                src="${item.image}"
-                alt="${item.name}"
+                src="${CS.escapeHtml(item.image)}"
+                alt="${CS.escapeHtml(item.name)}"
                 class="order-product-image"
-                title="${item.name}"
+                title="${CS.escapeHtml(item.name)} &times; ${item.quantity}"
             >
 
         `).join("");
@@ -206,7 +209,11 @@ function displayOrders() {
                     <div>
 
                         <p class="mb-1 text-muted">
-                            ${order.items.length} product type(s)
+                            ${order.items.length} product type(s) &middot;
+                            ${CS.escapeHtml(order.paymentMethod || "")}
+                            <span class="payment-pill payment-${String(order.paymentStatus || "").toLowerCase()}">
+                                ${paymentLabel(order)}
+                            </span>
                         </p>
 
                         <span class="order-total">
@@ -216,15 +223,27 @@ function displayOrders() {
                     </div>
 
 
-                    <button
-                        class="view-order-btn"
-                        data-id="${order.orderId}"
-                    >
+                    <div class="d-flex gap-2 flex-wrap justify-content-end">
 
-                        View Details
-                        <i class="bi bi-arrow-right"></i>
+                        ${order.canPay ? `
+                        <button class="btn btn-success btn-sm pay-order-btn" data-id="${order.orderId}">
+                            <i class="bi bi-phone"></i> Pay with M-Pesa
+                        </button>` : ""}
 
-                    </button>
+                        ${order.canCancel ? `
+                        <button class="btn btn-outline-danger btn-sm cancel-order-btn" data-id="${order.orderId}">
+                            Cancel
+                        </button>` : ""}
+
+                        <button
+                            class="view-order-btn"
+                            data-id="${order.orderId}"
+                        >
+                            View Details
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -259,11 +278,11 @@ function viewOrderDetails(orderId) {
 
         <div class="order-detail-product">
 
-            <img src="${item.image}" alt="${item.name}">
+            <img src="${CS.escapeHtml(item.image)}" alt="${CS.escapeHtml(item.name)}">
 
             <div>
 
-                <h6>${item.name}</h6>
+                <h6>${CS.escapeHtml(item.name)}</h6>
 
                 <p>
                     ${item.quantity} × ${formatPrice(item.price)}
@@ -317,7 +336,16 @@ function viewOrderDetails(orderId) {
 
             <span>Payment Method</span>
 
-            <strong>${order.paymentMethod}</strong>
+            <strong>${CS.escapeHtml(order.paymentMethod)}</strong>
+
+        </div>
+
+
+        <div class="order-detail-row">
+
+            <span>Payment Status</span>
+
+            <strong>${paymentLabel(order)}${order.mpesaReceipt ? ` (receipt ${CS.escapeHtml(order.mpesaReceipt)})` : ""}</strong>
 
         </div>
 
@@ -335,7 +363,7 @@ function viewOrderDetails(orderId) {
 
             <span>Delivery Location</span>
 
-            <strong>${order.delivery.location || "Campus Pickup"}</strong>
+            <strong>${CS.escapeHtml(order.delivery.location || "Campus Pickup")}</strong>
 
         </div>
 
@@ -372,7 +400,15 @@ function viewOrderDetails(orderId) {
 
         </div>
 
+        <div class="text-end mt-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="printReceipt">
+                <i class="bi bi-printer"></i> Print receipt
+            </button>
+        </div>
+
     `;
+
+    document.getElementById("printReceipt").addEventListener("click", () => printReceipt(order));
 
 
     // Open Bootstrap modal
@@ -400,6 +436,12 @@ ordersContainer.addEventListener("click", function(event) {
 
     }
 
+    const cancelButton = event.target.closest(".cancel-order-btn");
+    if (cancelButton) cancelOrder(cancelButton.dataset.id, cancelButton);
+
+    const payButton = event.target.closest(".pay-order-btn");
+    if (payButton) payOrder(payButton.dataset.id, payButton);
+
 });
 
 
@@ -408,8 +450,104 @@ ordersContainer.addEventListener("click", function(event) {
 orderFilter.addEventListener("change", displayOrders);
 
 
-// 11. INITIAL DISPLAY
+// 11. PAYMENT LABEL, CANCEL, PAY AND PRINT
 
-updateOrderOverview();
+function paymentLabel(order) {
+    const labels = { Paid: "Paid", Pending: order.paymentMethod === "M-Pesa" ? "Awaiting payment" : "Pay on collection", Failed: "Payment failed", Cancelled: "Cancelled" };
+    return labels[order.paymentStatus] || order.paymentStatus || "";
+}
 
-displayOrders();
+async function cancelOrder(ref, button) {
+    if (!confirm(`Cancel order ${ref}? The items will be returned to stock.`)) return;
+    button.disabled = true;
+    try {
+        const result = await CS.request(`/api/orders/${encodeURIComponent(ref)}/cancel`, { method: "POST" });
+        CS.toast(result.message, "success");
+        await loadOrders();
+    } catch (error) {
+        CS.toast(error.message, "error");
+        button.disabled = false;
+    }
+}
+
+async function payOrder(ref, button) {
+    button.disabled = true;
+    button.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Check your phone...`;
+    try {
+        const start = await CS.request(`/api/orders/${encodeURIComponent(ref)}/pay`, { method: "POST", body: {} });
+        if (start.status === "Failed") throw new Error(start.message);
+        CS.toast(start.mode === "demo" ? "Demo mode: payment request simulated. It confirms in a few seconds." : "M-Pesa request sent. Enter your PIN on your phone.", "info");
+
+        // Ask the server every 3 seconds for up to 90 seconds
+        for (let i = 0; i < 30; i++) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            const result = await CS.request(`/api/orders/${encodeURIComponent(ref)}/payment`);
+            if (result.status === "Paid") {
+                CS.toast(`Payment received${result.receipt ? ". Receipt " + result.receipt : ""}.`, "success");
+                break;
+            }
+            if (result.status === "Failed" || result.status === "Cancelled") throw new Error(result.message || "The payment was not completed.");
+        }
+    } catch (error) {
+        CS.toast(error.message, "error");
+    }
+    await loadOrders();
+}
+
+function printReceipt(order) {
+    const win = window.open("", "_blank");
+    if (!win) {
+        CS.toast("Allow pop ups for this site to print the receipt.", "error");
+        return;
+    }
+    const rows = order.items.map(item => `
+        <tr><td>${CS.escapeHtml(item.name)}</td><td>${item.quantity}</td>
+        <td>${formatPrice(item.price)}</td><td>${formatPrice(item.price * item.quantity)}</td></tr>`).join("");
+    win.document.write(`<!DOCTYPE html><html><head><title>Receipt ${CS.escapeHtml(order.orderId)}</title>
+        <style>
+            body{font-family:Arial,sans-serif;color:#263238;margin:32px;max-width:720px}
+            .head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #e58b45;padding-bottom:12px}
+            .logo{width:46px;height:46px;border-radius:50%;background:#172b4d;color:#e58b45;display:grid;place-items:center;font:700 19px Georgia,serif}
+            h1{margin:0;font:700 22px Georgia,serif;color:#172b4d} table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px}
+            th{background:#172b4d;color:#fff;text-align:left;padding:8px} td{padding:7px 8px;border-bottom:1px solid #eee}
+            .meta{font-size:13px;color:#555;margin-top:12px;line-height:1.7} .tot td{font-weight:700}
+            @media print{button{display:none}}
+        </style></head><body>
+        <div class="head"><div class="logo">CS</div><div><h1>CampusStationery</h1><div>Official receipt</div></div>
+        <button style="margin-left:auto;padding:8px 14px" onclick="window.print()">Print</button></div>
+        <div class="meta">Order: <strong>${CS.escapeHtml(order.orderId)}</strong><br>Date: ${formatDate(order.orderDate)}<br>
+        Customer: ${CS.escapeHtml((CS.getUser() || {}).full_name || "")}<br>Status: ${CS.escapeHtml(order.status)}<br>
+        Payment: ${CS.escapeHtml(order.paymentMethod)}, ${paymentLabel(order)}${order.mpesaReceipt ? ` (M-Pesa receipt ${CS.escapeHtml(order.mpesaReceipt)})` : ""}<br>
+        Delivery: ${CS.escapeHtml(order.delivery.method)}${order.delivery.location ? ", " + CS.escapeHtml(order.delivery.location) : ""}</div>
+        <table><thead><tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead><tbody>${rows}
+        <tr><td colspan="3">Subtotal</td><td>${formatPrice(order.subtotal)}</td></tr>
+        <tr><td colspan="3">Delivery</td><td>${formatPrice(order.deliveryCost)}</td></tr>
+        <tr class="tot"><td colspan="3">Total</td><td>${formatPrice(order.total)}</td></tr></tbody></table>
+        <p class="meta">Printed ${new Date().toLocaleString("en-KE")}. Thank you for shopping with CampusStationery.</p>
+        </body></html>`);
+    win.document.close();
+}
+
+
+// 12. LOAD ORDERS FROM THE DATABASE
+
+async function loadOrders() {
+    try {
+        const result = await CS.request("/api/orders/mine");
+        orders = result.data;
+        updateOrderOverview();
+        displayOrders();
+    } catch (error) {
+        ordersContainer.innerHTML = `
+            <div class="empty-orders">
+                <i class="bi bi-wifi-off"></i>
+                <h3>Orders could not be loaded</h3>
+                <p>${CS.escapeHtml(error.message)}</p>
+            </div>`;
+    }
+}
+
+if (loggedIn) {
+    ordersContainer.innerHTML = `<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading your orders...</div>`;
+    loadOrders();
+}
