@@ -22,6 +22,7 @@ const writeAudit = require('../utils/audit');
 const mpesa = require('../utils/mpesa');
 const { dataError } = require('../utils/dbErrors');
 const orders = require('../services/orderService');
+const purchases = require('../services/purchaseService');
 const twofa = require('../utils/twofactor');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const {
@@ -35,7 +36,7 @@ const TOKEN_HOURS = 8;
 
 // Tables with their own pages (or private data) are left out of the generic "Manage data" screens,
 // so orders and payments can only change through the business rules in services/orderService.js
-const INTERNAL_TABLES = ['admins', 'audit_log', 'orders', 'order_items', 'payments', 'password_resets'];
+const INTERNAL_TABLES = ['admins', 'audit_log', 'orders', 'order_items', 'payments', 'password_resets', 'purchase_orders', 'purchase_order_items'];
 const SENSITIVE_COLUMN = /pass(word)?|hash|salt|token|secret|otp/i;
 
 /* ---------------- helpers ---------------- */
@@ -737,6 +738,49 @@ router.delete('/admins/:id', requireSuperAdmin, wrap(async (req, res) => {
 
 
 /* ---------------- errors ---------------- */
+
+/* ---------------- restocking: purchase orders to suppliers ---------------- */
+
+router.get('/purchase-orders', wrap(async (req, res) => {
+  res.json(await purchases.list({ status: req.query.status, search: String(req.query.search || '').trim() }));
+}));
+
+// Products at or below the low stock level, with a suggested quantity to order
+router.get('/purchase-orders/suggestions', wrap(async (req, res) => {
+  res.json({ rows: await purchases.suggestions(), lowStockLevel: shop.LOW_STOCK_LEVEL });
+}));
+
+// What the "new purchase order" form needs: active suppliers and every product
+router.get('/purchase-orders/options', wrap(async (req, res) => {
+  const [suppliers] = await pool.query('SELECT id, name, contact_person, phone, email FROM suppliers WHERE is_active = 1 ORDER BY name');
+  const [products] = await pool.query(
+    `SELECT p.id, p.name, c.name AS category_name, p.stock_quantity, p.price, p.is_active
+     FROM products p JOIN categories c ON c.id = p.category_id ORDER BY p.name`);
+  res.json({ suppliers, products: products.map(p => ({ ...p, price: Number(p.price) })) });
+}));
+
+router.get('/purchase-orders/:id', wrap(async (req, res) => {
+  res.json(await purchases.find(req.params.id));
+}));
+
+router.post('/purchase-orders', wrap(async (req, res) => {
+  const result = await purchases.create(req.body || {}, req.admin.id);
+  await audit(req, 'PURCHASE_ORDER_CREATED', 'purchase_orders', result.id, { po_ref: result.po_ref, supplier_id: req.body.supplier_id, lines: (req.body.items || []).length });
+  res.status(201).json({ ok: true, ...result, message: `Purchase order ${result.po_ref} saved. Mark it as received when the goods arrive.` });
+}));
+
+router.post('/purchase-orders/:id/receive', wrap(async (req, res) => {
+  const result = await purchases.receive(req.params.id, req.admin.id);
+  await audit(req, 'PURCHASE_ORDER_RECEIVED', 'purchase_orders', req.params.id, { po_ref: result.po_ref, stock_added: result.added });
+  const units = result.added.reduce((t, a) => t + a.added, 0);
+  res.json({ ok: true, message: `${result.po_ref} received. ${units} units were added to stock.` });
+}));
+
+router.post('/purchase-orders/:id/cancel', wrap(async (req, res) => {
+  const result = await purchases.cancel(req.params.id);
+  await audit(req, 'PURCHASE_ORDER_CANCELLED', 'purchase_orders', req.params.id, { po_ref: result.po_ref });
+  res.json({ ok: true, message: `${result.po_ref} cancelled. Stock was not changed.` });
+}));
 
 router.use((err, req, res, next) => {
   if (err instanceof orders.OrderError) return res.status(err.status).json({ error: err.message });

@@ -74,6 +74,7 @@ async function renderDashboard() {
         <div class="panel h-100">
           <div class="d-flex align-items-center mb-3"><h6 class="fw-bold mb-0"><i class="fa-solid fa-boxes-stacked me-2 text-warning"></i>Low stock</h6>
             <a class="ms-auto small" href="#reports/inventory">Stock report</a></div>
+          ${d.lowStock.length ? `<a class="btn btn-sm btn-accent w-100 mb-3" style="color:#fff" href="#purchases/new"><i class="fa-solid fa-truck-ramp-box me-1"></i>Restock these items</a>` : ''}
           ${d.lowStock.length ? `<table class="table table-sm mb-0"><tbody>${d.lowStock.map(r => `
             <tr><td>${esc(r.label)}</td><td class="text-end"><span class="badge ${Number(r.stock) <= 0 ? 'badge-off' : 'badge-warn'}">${Number(r.stock) <= 0 ? 'Out of stock' : esc(r.stock) + ' left'}</span></td></tr>`).join('')}</tbody></table>`
             : '<p class="text-secondary small mb-0">All products are well stocked.</p>'}

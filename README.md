@@ -17,7 +17,7 @@ admin panel: products, stock, orders, payments, customers, reports, admin accoun
 |---|---|
 | `docs/CampusStationery_User_Manual.docx` (and `.pdf`) | Installing, the customer guide, the admin guide, security, hosting online, troubleshooting |
 | `docs/CampusStationery_System_Documentation.docx` (and `.pdf`) | Requirements, architecture, use case, flowchart, sequence, class and ER diagrams, data dictionary, implementation, test results, deployment, maintenance |
-| `docs/database-er-diagram.png` | Entity relationship diagram of the 9 tables |
+| `docs/database-er-diagram.png` | Entity relationship diagram of the 12 tables |
 | `database/campus_stationery.sql` | Documented SQL script of the whole database |
 
 ---
@@ -59,9 +59,9 @@ the starting products the first time it runs, and upgrades older copies of the d
 | Command | What it does |
 |---|---|
 | `npm start` | Starts the system |
-| `npm run demo-data` | Adds 6 sample customers and about 30 orders over 14 days so the dashboard and reports have data (log in as `<name>@demo.campusstationery.com` / `Demo1234`) |
+| `npm run demo-data` | Adds 2 sample suppliers, 6 sample customers and about 30 orders over 14 days so the dashboard and reports have data (log in as `<name>@demo.campusstationery.com` / `Demo1234`) |
 | `npm run reset-admin` | Resets admin@campusstationery.com to Admin@123 and removes a lost authenticator app. Another admin: `npm run reset-admin -- someone@example.com NewPass123` |
-| `npm test` | Runs the 20 automated system tests (MySQL must be running). The tests clean up after themselves |
+| `npm test` | Runs the 24 automated system tests (MySQL must be running). The tests clean up after themselves |
 
 ---
 
@@ -69,11 +69,11 @@ the starting products the first time it runs, and upgrades older copies of the d
 
 | Guideline | Where to see it |
 |---|---|
-| Database: entities, attributes, normalisation, relationships | 9 tables in third normal form, linked by foreign keys. `database/campus_stationery.sql`, `docs/database-er-diagram.png`, data dictionary in the system documentation |
+| Database: entities, attributes, normalisation, relationships | 12 tables in third normal form, linked by foreign keys. `database/campus_stationery.sql`, `docs/database-er-diagram.png`, data dictionary in the system documentation |
 | Uniformity and ease of use | The same menu, colours and layout on every page of the shop and the admin panel |
-| Add, delete, edit, browse and search | Admin panel: Products, Categories, Users, Orders, Admin accounts. Shop: search, category and price filters, sorting |
+| Add, delete, edit, browse and search | Admin panel: Products, Categories, Suppliers, Users, Orders, Purchase orders, Admin accounts. Shop: search, category and price filters, sorting |
 | Help facilities and error messages | Shop Help centre and admin Help (F1 on any page). A clear message on every form and for every server or database problem |
-| Main transaction | Placing an order: stock is checked and reduced in one database transaction, then paid with M-Pesa or cash (`services/orderService.js`) |
+| Main transaction | Placing an order: stock is checked and reduced in one database transaction, then paid with M-Pesa or cash (`services/orderService.js`). Restocking: a purchase order adds stock in one transaction when received (`services/purchaseService.js`) |
 | Levels of access | Customer, admin and super admin. Login, logout, registration and forgot password |
 | Reports | Sales, Orders, and Inventory and Stock reports with the shop name, logo, date generated, filters and sorting. Print, save as PDF or export CSV |
 | Frameworks, libraries and APIs | Bootstrap 5, Bootstrap Icons, Font Awesome, Chart.js, Express, mysql2, bcrypt, qrcode, Safaricom Daraja M-Pesa API |
@@ -82,7 +82,7 @@ the starting products the first time it runs, and upgrades older copies of the d
 | Security | bcrypt and scrypt password hashing, prepared statements, **two factor authentication** (authenticator app or emailed codes), AES 256 encryption of 2FA keys, login lockout, signed tokens, HTTPS when hosted |
 | Packaging and deployment | **Setup wizard** `setup/CampusStationery-Setup-1.0.0.exe` (built from `installer/`); `setup.bat` and `start.bat`; **online hosting** with `render.yaml` |
 | User manual and documentation | `docs/` (user manual and system documentation, Word and PDF) and this README |
-| Coding practices | Separate folders for routes, services, middleware, utilities and settings, comments throughout, 20 automated tests |
+| Coding practices | Separate folders for routes, services, middleware, utilities and settings, comments throughout, 24 automated tests |
 
 ---
 
@@ -102,14 +102,16 @@ the starting products the first time it runs, and upgrades older copies of the d
 ### Admin panel
 * **Two factor sign in** for every admin: a code from an authenticator app (Google or Microsoft
   Authenticator, linked by QR code) or a 6 digit code by email
-* Dashboard: sales totals, open orders, low stock, 7 day sales chart, latest orders, recent activity
+* Dashboard: sales totals, open orders, low stock (with a **Restock these items** button), 7 day sales chart, latest orders, recent activity
+* **Restock:** purchase orders to suppliers for low and out of stock items (filled in with suggested quantities),
+  printed on the shop letterhead. Stock goes up only when the delivery is marked as received, in one transaction
 * **Orders:** filter by status, payment and date, search, sort; move orders through
   Pending → Processing → Ready for Collection → Completed (only valid steps are offered);
   cancel (stock returned automatically); record cash or M-Pesa payments; print an invoice
 * **Reports:** Sales (by day, product, category or payment method), Orders, Inventory and Stock.
   Date range, filters and sorting. Printable with the shop name, logo, date generated, who prepared
   it and the filters used (Print / Save as PDF), and Export CSV for Excel
-* Manage data: add, edit, delete, search, sort and print Products, Categories and Users
+* Manage data: add, edit, delete, search, sort and print Products, Categories, Suppliers and Users
 * Access levels: **super admin** (everything, including admin accounts and resetting an admin's 2FA) and **admin**
 * **Audit trail** of every admin and customer action, with time and IP address
 
@@ -172,7 +174,7 @@ set in `MPESA_CALLBACK_URL`. Check the Daraja documentation for the current sand
 server.js              starts the web server
 config/                database connection, automatic schema, shop settings
 routes/                API endpoints (products, users, orders, payments, admin)
-services/              order and payment business rules (the main transaction)
+services/              business rules: orders and payments (the main transaction), restocking
 middleware/            login checks
 utils/                 security, two factor authentication, audit trail, email, M-Pesa, error messages
 pages/, index.html     customer pages

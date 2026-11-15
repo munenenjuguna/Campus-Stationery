@@ -146,6 +146,7 @@ async function route() {
   try {
     if (hash === 'dashboard') return await renderDashboard();
     if (hash === 'orders') return await renderOrders();
+    if (hash === 'purchases' || hash === 'purchases/new') return await renderPurchases(hash === 'purchases/new');
     if (hash === 'reports' || hash.startsWith('reports/')) return await renderReports(hash.split('/')[1]);
     if (hash.startsWith('table/')) return await renderTable(hash.slice(6));
     if (hash === 'audit') return await renderAudit();
@@ -764,7 +765,7 @@ document.addEventListener('keydown', e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
   if (e.key === 'F1') { e.preventDefault(); bootstrap.Modal.getOrCreateInstance($('#helpModal')).show(); }
   else if (e.key === '/' && !typing) { const s = $('#searchBox'); if (s) { e.preventDefault(); s.focus(); } }
-  else if (e.altKey && e.key.toLowerCase() === 'n') { const b = $('#addBtn'); if (b) { e.preventDefault(); b.click(); } }
+  else if (e.altKey && e.key.toLowerCase() === 'n') { const b = $('#addBtn') || $('#newPoBtn'); if (b) { e.preventDefault(); b.click(); } }
   else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && $('#recordModal').classList.contains('show')) {
     e.preventDefault(); $('#recordForm').requestSubmit();
   }

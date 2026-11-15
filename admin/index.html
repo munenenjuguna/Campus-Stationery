@@ -24,6 +24,7 @@
       <div class="nav-label">Sales</div>
       <a href="#orders" class="side-link" data-view="orders"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
       <a href="#reports" class="side-link" data-view="reports"><i class="fa-solid fa-chart-pie"></i> Reports</a>
+      <a href="#purchases" class="side-link" data-view="purchases"><i class="fa-solid fa-truck-ramp-box"></i> Restock</a>
       <div class="nav-label">Manage data</div>
       <div id="tableLinks"></div>
       <div class="nav-label">Control</div>
@@ -129,6 +130,8 @@
           <p><b>Super admin</b> can do everything, including adding admins and resetting their passwords. <b>Admin</b> can manage shop data but not admin accounts.</p>
           <h6 class="fw-bold">Audit trail</h6>
           <p>Every admin and customer login, order, payment, add, edit and delete is recorded with who did it, when, and from which IP address. Use the filter to see admins or customers only.</p>
+          <h6 class="fw-bold">Restocking</h6>
+          <p>Open <b>Restock</b> (or <b>Restock these items</b> on the dashboard) and click <b>New purchase order</b>. Choose a supplier; low and out of stock products are added with suggested quantities, which you can change. Save and print it for the supplier. Stock goes up only when the delivery arrives and you open the purchase order and click <b>Mark as received</b>. Suppliers are kept under <b>Manage data</b>.</p>
           <h6 class="fw-bold">Two factor authentication</h6>
           <p>Every admin sign in needs the password and a 6 digit code. The code is emailed, or shown in the server window when email is not set up. Under <b>Security</b> you can link an authenticator app (Google Authenticator, Microsoft Authenticator) instead, so the code comes from your phone. Lost phone? Choose <b>Use an email code instead</b> on the sign in page, or a super admin can reset your two factor setting under <b>Admin accounts</b>.</p>
           <h6 class="fw-bold">Forgotten admin password</h6>
@@ -151,6 +154,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
   <script src="admin-orders.js"></script>
+  <script src="admin-purchases.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

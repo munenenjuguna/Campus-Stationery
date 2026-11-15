@@ -14,6 +14,10 @@
 --   products   1 ---- * order_items     a product appears on many order lines
 --   orders     1 ---- * payments        an order can have several payment attempts
 --   users      1 ---- * password_resets
+--   suppliers  1 ---- * purchase_orders        the shop orders stock from many suppliers
+--   purchase_orders 1 ---- * purchase_order_items  a purchase order has one or more lines
+--   products   1 ---- * purchase_order_items   a product can be restocked many times
+--   admins     1 ---- * purchase_orders        who created and who received each purchase order
 --   admins and audit_log stand alone (audit_log stores who did what, for both admins and customers)
 -- ==============================================================
 
@@ -131,6 +135,49 @@ CREATE TABLE IF NOT EXISTS admins (
   twofa_enabled TINYINT(1) NOT NULL DEFAULT 0,     -- 1 = codes from an authenticator app, 0 = emailed codes
   last_login DATETIME NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Suppliers the shop buys stock from
+CREATE TABLE IF NOT EXISTS suppliers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  contact_person VARCHAR(100) NULL,
+  phone VARCHAR(20) NULL,
+  email VARCHAR(150) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Purchase orders for restocking. Stock is added only when the status becomes Received.
+-- Totals are not stored: they are calculated from purchase_order_items.
+CREATE TABLE IF NOT EXISTS purchase_orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  po_ref VARCHAR(20) NOT NULL UNIQUE,              -- for example PO-261115-0576
+  supplier_id INT NOT NULL,
+  status ENUM('Ordered','Received','Cancelled') NOT NULL DEFAULT 'Ordered',
+  expected_date DATE NULL,
+  notes VARCHAR(500) NULL,
+  created_by INT NULL,                             -- admin who raised it
+  received_by INT NULL,                            -- admin who confirmed the delivery
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  received_at DATETIME NULL,
+  INDEX idx_po_status (status),
+  INDEX idx_po_created (created_at),
+  CONSTRAINT fk_po_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_po_created_by FOREIGN KEY (created_by) REFERENCES admins(id) ON UPDATE CASCADE ON DELETE SET NULL,
+  CONSTRAINT fk_po_received_by FOREIGN KEY (received_by) REFERENCES admins(id) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Lines of each purchase order. unit_cost is what the supplier charges.
+CREATE TABLE IF NOT EXISTS purchase_order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  purchase_order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  unit_cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+  UNIQUE KEY uq_po_product (purchase_order_id, product_id),
+  CONSTRAINT fk_poi_order FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_poi_product FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 -- Audit trail: who did what and when (admins, customers and the system)

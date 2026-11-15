@@ -180,6 +180,47 @@ const TABLES = [
     twofa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     last_login DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`,
+
+  // Restocking: suppliers, and purchase orders the shop sends them.
+  // Like customer orders, purchase order totals are worked out from the lines, not stored.
+  `CREATE TABLE IF NOT EXISTS suppliers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    contact_person VARCHAR(100) NULL,
+    phone VARCHAR(20) NULL,
+    email VARCHAR(150) NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB`,
+
+  `CREATE TABLE IF NOT EXISTS purchase_orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    po_ref VARCHAR(20) NOT NULL UNIQUE,
+    supplier_id INT NOT NULL,
+    status ENUM('Ordered','Received','Cancelled') NOT NULL DEFAULT 'Ordered',
+    expected_date DATE NULL,
+    notes VARCHAR(500) NULL,
+    created_by INT NULL,
+    received_by INT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    received_at DATETIME NULL,
+    INDEX idx_po_status (status),
+    INDEX idx_po_created (created_at),
+    CONSTRAINT fk_po_supplier FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_po_created_by FOREIGN KEY (created_by) REFERENCES admins(id) ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT fk_po_received_by FOREIGN KEY (received_by) REFERENCES admins(id) ON UPDATE CASCADE ON DELETE SET NULL
+  ) ENGINE=InnoDB`,
+
+  `CREATE TABLE IF NOT EXISTS purchase_order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    purchase_order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+    UNIQUE KEY uq_po_product (purchase_order_id, product_id),
+    CONSTRAINT fk_poi_order FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_poi_product FOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE CASCADE ON DELETE RESTRICT
   ) ENGINE=InnoDB`
 ];
 

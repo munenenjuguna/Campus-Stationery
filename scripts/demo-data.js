@@ -1,5 +1,5 @@
 // scripts/demo-data.js
-// Adds sample customers and about 30 orders spread over the last 14 days, so the dashboard chart
+// Adds two sample suppliers, sample customers and about 30 orders spread over the last 14 days, so the dashboard chart
 // and the reports have something to show during a demonstration.
 //   npm run demo-data
 // Sample customers use emails ending in @demo.campusstationery.com (password Demo1234).
@@ -20,8 +20,17 @@ const CUSTOMERS = [
 const pick = list => list[Math.floor(Math.random() * list.length)];
 const rand = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
 
+// Two clearly marked sample suppliers, so restocking (purchase orders) can be shown
+const SUPPLIERS = [
+  ['Sample Paper and Books Wholesale', 'Orders desk'],
+  ['Sample Office Supplies Distributors', 'Sales desk']
+];
+
 (async () => {
   await ensureSchema();
+  const [sup] = await db.query('INSERT IGNORE INTO suppliers (name, contact_person) VALUES ?', [SUPPLIERS]);
+  if (sup.affectedRows) console.log(`Added ${sup.affectedRows} sample supplier(s) for restocking.`);
+
   const [existing] = await db.query("SELECT COUNT(*) AS n FROM users WHERE email LIKE '%@demo.campusstationery.com'");
   if (existing[0].n > 0) {
     console.log('Sample data is already loaded. Nothing to do.');
